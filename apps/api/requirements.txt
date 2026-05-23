@@ -2,3 +2,8 @@ fastapi
 uvicorn
 requests
 python-dotenv
+langchain-text-splitters
+openai
+chromadb
+tiktoken
+anthropic
