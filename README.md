@@ -2,7 +2,7 @@
 
 > AI that reads any GitHub repo so you don't have to.
 
-Paste a public GitHub repository, ask anything, get an answer with citations to the actual source files. Built end-to-end as a 5-day learning project in Retrieval-Augmented Generation (RAG).
+Paste a public GitHub repository, ask anything, get an answer with citations to the actual source files.
 
 ![Screenshot placeholder — replace with apps/web/public/screenshot.png](apps/web/public/image.png)
 
@@ -163,22 +163,11 @@ repochat-ai/
     └── chroma/               # local vector DB (gitignored)
 ```
 
-## Why I built this
+## The problem
 
-Onboarding into a new codebase is one of the most expensive activities in software engineering — and the tools haven't really changed in twenty years. Clone, grep, scan the README, hope the author left breadcrumbs.
+Developers spend too much time understanding unfamiliar codebases.
 
-RepoChat is an experiment in making that a conversation instead of archaeology. It also gave me an end-to-end RAG implementation to build, debug, and reason about — instead of treating retrieval as a black box.
-
-## What I learned
-
-Building this surfaced a lot of practical AI concepts I had only read about:
-
-- **Chunking strategy** — fixed-size character splits look obvious until you realize they cut functions in half. Language-aware splitters (LangChain's `from_language`) preserve semantic boundaries by knowing about `def`, `class`, etc.
-- **Embedding model choice** — `text-embedding-3-small` is dramatically cheaper than `large` and within ~6% on benchmarks. For retrieval over code chunks the gap is invisible.
-- **Retrieval quality dominates LLM choice** — once the right chunks are in context, smaller LLMs produce nearly identical answers. The real lever is the embedding + retrieval pipeline, not the generator.
-- **Vector DB ergonomics** — ChromaDB's `where` filter on metadata is the underrated feature: it scopes a single shared collection by `repo_id` instead of requiring one collection per repo.
-- **Two-provider stacks** — OpenAI for embeddings, Anthropic for generation. Each used where it's strongest. The "one provider for everything" reflex is often wrong.
-- **Grounded synthesis prompting** — instructing the LLM to answer *only* from provided excerpts (and explicitly to say "I don't know" otherwise) is the difference between a useful tool and a confident hallucinator.
+RepoChat AI is an experiment in combining RAG, semantic search, code understanding, and AI-assisted developer workflows to make onboarding into repositories much faster.
 
 ## Future improvements
 
