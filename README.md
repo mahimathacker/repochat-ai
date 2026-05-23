@@ -1,102 +1,107 @@
 # RepoChat AI
 
-AI explains any codebase.
+> AI that reads any GitHub repo so you don't have to.
 
-RepoChat AI lets you paste a public GitHub repository URL and ask questions about the codebase using AI-powered retrieval and semantic search.
+Paste a public GitHub repository, ask anything, get an answer with citations to the actual source files. Built end-to-end as a 5-day learning project in Retrieval-Augmented Generation (RAG).
 
-It is built to help developers quickly understand unfamiliar repositories, architecture, APIs, and project structure.
+![Screenshot placeholder — replace with apps/web/public/screenshot.png](apps/web/public/image.png)
 
-## Features
+▶ **[Watch the demo](#)** — *(add your X / YouTube link here once recorded)*
+
+---
+
+## What it does
 
 - Paste any public GitHub repository URL
-- Automatically fetch and process repository files
-- Chunk and embed code and documentation
+- The backend fetches relevant files, chunks them, and stores embeddings in a local vector DB
 - Ask natural-language questions about the repo
-- Get AI-generated answers with source references
-- Use a simple developer-focused UI
+- Get AI-generated answers with **clickable source citations** to specific files on GitHub
 
-## Example Questions
+## How it works
 
-- What does this project do?
-- Explain the architecture.
-- How is authentication implemented?
-- Where is database logic handled?
-- How do I run this locally?
-- Which APIs are exposed?
+```
+                   ┌────────────────────┐
+                   │  GitHub repo URL   │
+                   └─────────┬──────────┘
+                             │
+                  ┌──────────▼───────────┐
+                  │  GitHub REST API     │  ← fetch tree + raw files
+                  └──────────┬───────────┘
+                             │
+                  ┌──────────▼───────────┐
+                  │  Language-aware      │  ← RecursiveCharacterTextSplitter
+                  │  chunker (LangChain) │
+                  └──────────┬───────────┘
+                             │
+                  ┌──────────▼───────────┐
+                  │  OpenAI embeddings   │  ← text-embedding-3-small
+                  └──────────┬───────────┘
+                             │
+                  ┌──────────▼───────────┐
+                  │  ChromaDB (on-disk)  │  ← stores vector + path + repo_id
+                  └──────────┬───────────┘
+                             │
+                  ─────────── ask question ───────────
+                             │
+                  ┌──────────▼───────────┐
+                  │  Retriever — top-K   │  ← nearest-neighbor on the question
+                  └──────────┬───────────┘
+                             │
+                  ┌──────────▼───────────┐
+                  │  Claude Sonnet 4.6   │  ← grounded synthesis from chunks
+                  └──────────┬───────────┘
+                             │
+                  ┌──────────▼───────────┐
+                  │  Answer + sources    │
+                  └──────────────────────┘
+```
 
-## Tech Stack
+Each chunk stores its file path and repo identifier as metadata, so the retriever can scope queries to a single repo and answers can cite specific files.
 
-### Frontend
+## Tech stack
 
-- Next.js
-- React
-- Tailwind CSS
-- TypeScript
+**Frontend**
+- Next.js 16 (App Router)
+- React 19
+- Tailwind CSS v4 (+ typography plugin)
+- react-markdown + rehype-highlight
+
+**Backend**
+- FastAPI (Python 3.11+)
+- LangChain text splitters
+- OpenAI Python SDK — embeddings
+- ChromaDB — vector store
+- Anthropic Python SDK — Claude Sonnet 4.6 for generation
+- GitHub REST API
+
+## Running locally
+
+### Prerequisites
+
+- Python 3.11+
+- Node.js 20+
+- An [OpenAI API key](https://platform.openai.com/api-keys) (for embeddings)
+- An [Anthropic API key](https://console.anthropic.com/settings/keys) (for Q&A)
+- (Optional) A [GitHub personal access token](https://github.com/settings/tokens) — bumps API rate limit from 60/hr to 5000/hr
 
 ### Backend
 
-- FastAPI
-- LangChain
-- OpenAI / Claude API
-- ChromaDB
-- GitHub API
+```bash
+cd apps/api
+python3.11 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 
-## Folder Structure
+cp .env.example .env
+# Edit .env and add:
+#   OPENAI_API_KEY=sk-...
+#   ANTHROPIC_API_KEY=sk-ant-...
+#   GITHUB_TOKEN=ghp_...   (optional)
 
-```text
-repochat-ai/
-  apps/
-    web/
-    api/
-
-  data/
-    chroma/
-
-  README.md
+uvicorn main:app --reload
 ```
 
-## How It Works
-
-1. User pastes a GitHub repository URL.
-2. Backend fetches repository files.
-3. Files are chunked and embedded.
-4. Embeddings are stored in ChromaDB.
-5. User asks questions about the repository.
-6. Relevant chunks are retrieved.
-7. AI generates an answer with source references.
-
-## API Endpoints
-
-### Index Repository
-
-```http
-POST /index-repo
-```
-
-Input:
-
-```json
-{
-  "repo_url": "https://github.com/owner/repo"
-}
-```
-
-### Ask Questions
-
-```http
-POST /ask
-```
-
-Input:
-
-```json
-{
-  "repo_id": "repo-name",
-  "question": "How does authentication work?"
-}
-```
-
-## Local Development
+The API serves at `http://localhost:8000`. Swagger UI at `http://localhost:8000/docs`.
 
 ### Frontend
 
@@ -106,39 +111,84 @@ npm install
 npm run dev
 ```
 
-The frontend runs locally with the Next.js development server.
+Open `http://localhost:3000`.
 
-### Backend
+## API
 
-```bash
-cd apps/api
-pip install -r requirements.txt
-uvicorn main:app --reload
+### `POST /index-repo`
+
+```json
+{ "repo_url": "https://github.com/owner/repo" }
 ```
 
-The backend runs locally with FastAPI and serves the indexing and question-answering endpoints.
+Fetches the repo, chunks supported files (`.md`, `.py`, `.ts`, `.tsx`, `.js`, `.jsx`, `.json`), and stores embeddings.
 
-## Environment Variables
-
-Create an environment file for the backend and add the API keys needed by the services you use:
-
-```env
-OPENAI_API_KEY=
-GITHUB_TOKEN=
+```json
+{ "repo_id": "owner/repo", "file_count": 47, "chunk_count": 148 }
 ```
 
-## Future Improvements
+### `POST /ask`
 
-- Support large repositories
-- Repo architecture visualization
-- Multi-repo chat
-- Code dependency graphs
-- MCP integration
-- Streaming responses
-- Memory and session support
+```json
+{ "repo_id": "owner/repo", "question": "How does authentication work?" }
+```
 
-## Why I Built This
+Returns an answer + the source chunks used to generate it:
 
-Developers spend too much time understanding unfamiliar codebases.
+```json
+{
+  "answer": "Authentication uses JWT tokens issued by ... (src/auth.ts)",
+  "sources": [
+    { "path": "src/auth.ts", "chunk_index": 4, "distance": 0.187 },
+    { "path": "src/middleware.ts", "chunk_index": 0, "distance": 0.213 }
+  ]
+}
+```
 
-RepoChat AI is an experiment in combining RAG, semantic search, code understanding, and AI-assisted developer workflows to make onboarding into repositories much faster.
+## Folder structure
+
+```
+repochat-ai/
+├── apps/
+│   ├── api/                  # FastAPI backend
+│   │   ├── main.py           # routes + CORS + Pydantic models
+│   │   ├── repo_loader.py    # GitHub URL → file list
+│   │   ├── chunker.py        # files → chunks (language-aware)
+│   │   ├── embeddings.py     # chunks → vectors → Chroma
+│   │   └── rag.py            # retrieve + prompt + Claude
+│   └── web/                  # Next.js frontend
+│       ├── app/page.tsx      # single-page chat UI
+│       └── lib/api.ts        # typed API client
+└── data/
+    └── chroma/               # local vector DB (gitignored)
+```
+
+## Why I built this
+
+Onboarding into a new codebase is one of the most expensive activities in software engineering — and the tools haven't really changed in twenty years. Clone, grep, scan the README, hope the author left breadcrumbs.
+
+RepoChat is an experiment in making that a conversation instead of archaeology. It also gave me an end-to-end RAG implementation to build, debug, and reason about — instead of treating retrieval as a black box.
+
+## What I learned
+
+Building this surfaced a lot of practical AI concepts I had only read about:
+
+- **Chunking strategy** — fixed-size character splits look obvious until you realize they cut functions in half. Language-aware splitters (LangChain's `from_language`) preserve semantic boundaries by knowing about `def`, `class`, etc.
+- **Embedding model choice** — `text-embedding-3-small` is dramatically cheaper than `large` and within ~6% on benchmarks. For retrieval over code chunks the gap is invisible.
+- **Retrieval quality dominates LLM choice** — once the right chunks are in context, smaller LLMs produce nearly identical answers. The real lever is the embedding + retrieval pipeline, not the generator.
+- **Vector DB ergonomics** — ChromaDB's `where` filter on metadata is the underrated feature: it scopes a single shared collection by `repo_id` instead of requiring one collection per repo.
+- **Two-provider stacks** — OpenAI for embeddings, Anthropic for generation. Each used where it's strongest. The "one provider for everything" reflex is often wrong.
+- **Grounded synthesis prompting** — instructing the LLM to answer *only* from provided excerpts (and explicitly to say "I don't know" otherwise) is the difference between a useful tool and a confident hallucinator.
+
+## Future improvements
+
+- Stream the answer (Server-Sent Events) instead of waiting for the full response
+- Persist conversation history server-side
+- Line-range source links (`#L42-L78`) by carrying line numbers through chunking
+- Support large repos that exceed GitHub's tree-truncation limit
+- Distance-threshold gating so off-topic questions get a clear "I don't know" instead of low-confidence guesses
+- Per-repo collections to support clean re-indexing
+
+## Built by
+
+**[Mahima Thacker](https://github.com/mahimathacker)** — [@mahima_thacker](https://twitter.com/mahima_thacker) on X
