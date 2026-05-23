@@ -6,7 +6,7 @@ Paste a public GitHub repository, ask anything, get an answer with citations to 
 
 ![Screenshot placeholder - replace with apps/web/public/screenshot.png](apps/web/public/image.png)
 
-▶ **[Watch the demo](#)** - *(add your X / YouTube link here once recorded)*
+▶ **[Watch the demo](#)** - **
 
 ---
 
