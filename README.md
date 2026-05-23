@@ -4,9 +4,9 @@
 
 Paste a public GitHub repository, ask anything, get an answer with citations to the actual source files.
 
-![Screenshot placeholder — replace with apps/web/public/screenshot.png](apps/web/public/image.png)
+![Screenshot placeholder - replace with apps/web/public/screenshot.png](apps/web/public/image.png)
 
-▶ **[Watch the demo](#)** — *(add your X / YouTube link here once recorded)*
+▶ **[Watch the demo](#)** - *(add your X / YouTube link here once recorded)*
 
 ---
 
@@ -44,7 +44,7 @@ Paste a public GitHub repository, ask anything, get an answer with citations to 
                   ─────────── ask question ───────────
                              │
                   ┌──────────▼───────────┐
-                  │  Retriever — top-K   │  ← nearest-neighbor on the question
+                  │  Retriever - top-K   │  ← nearest-neighbor on the question
                   └──────────┬───────────┘
                              │
                   ┌──────────▼───────────┐
@@ -69,9 +69,9 @@ Each chunk stores its file path and repo identifier as metadata, so the retrieve
 **Backend**
 - FastAPI (Python 3.11+)
 - LangChain text splitters
-- OpenAI Python SDK — embeddings
-- ChromaDB — vector store
-- Anthropic Python SDK — Claude Sonnet 4.6 for generation
+- OpenAI Python SDK - embeddings
+- ChromaDB - vector store
+- Anthropic Python SDK - Claude Sonnet 4.6 for generation
 - GitHub REST API
 
 ## Running locally
@@ -82,7 +82,7 @@ Each chunk stores its file path and repo identifier as metadata, so the retrieve
 - Node.js 20+
 - An [OpenAI API key](https://platform.openai.com/api-keys) (for embeddings)
 - An [Anthropic API key](https://console.anthropic.com/settings/keys) (for Q&A)
-- (Optional) A [GitHub personal access token](https://github.com/settings/tokens) — bumps API rate limit from 60/hr to 5000/hr
+- (Optional) A [GitHub personal access token](https://github.com/settings/tokens) - bumps API rate limit from 60/hr to 5000/hr
 
 ### Backend
 
@@ -180,4 +180,4 @@ RepoChat AI is an experiment in combining RAG, semantic search, code understandi
 
 ## Built by
 
-**[Mahima Thacker](https://github.com/mahimathacker)** — [@mahima_thacker](https://twitter.com/mahima_thacker) on X
+**[Mahima Thacker](https://github.com/mahimathacker)** - [@mahima_thacker](https://twitter.com/mahima_thacker) on X

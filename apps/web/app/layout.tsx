@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "RepoChat — AI that reads code",
+  title: "RepoChat - AI that reads code",
   description: "Paste a GitHub repo, ask anything. AI explains code with file citations.",
 };
 
